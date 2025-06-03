@@ -1,6 +1,6 @@
 {
   "name": "react-virtual-sortable",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "A virtual scrolling list component that can be sorted by dragging",
   "main": "dist/virtual-list.js",
   "types": "types/index.d.ts",
@@ -37,7 +37,7 @@
   },
   "homepage": "https://github.com/mfuu/react-virtual-sortable#readme",
   "dependencies": {
-    "sortable-dnd": "^0.6.22"
+    "sortable-dnd": "^0.6.23"
   },
   "devDependencies": {
     "@babel/core": "^7.16.7",
