@@ -1,6 +1,6 @@
 {
   "name": "react-virtual-sortable",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "A virtual scrolling list component that can be sorted by dragging",
   "main": "dist/virtual-list.js",
   "types": "types/index.d.ts",
@@ -10,6 +10,7 @@
   ],
   "scripts": {
     "build": "rollup --config",
+    "publish": "npm publish",
     "core:update": "git submodule update --remote",
     "docs:dev": "cross-env APP_ROOT=dumi dumi dev",
     "docs:build": "cross-env APP_ROOT=dumi dumi build"
