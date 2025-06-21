@@ -1,6 +1,6 @@
 {
   "name": "react-virtual-sortable",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "description": "A virtual scrolling list component that can be sorted by dragging",
   "main": "dist/virtual-list.js",
   "types": "types/index.d.ts",

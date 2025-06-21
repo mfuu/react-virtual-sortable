@@ -1,5 +1,5 @@
 /*!
- * react-virtual-sortable v1.0.2
+ * react-virtual-sortable v1.0.3
  * open source under the MIT license
  * https://github.com/mfuu/react-virtual-sortable#readme
  */
@@ -1953,9 +1953,8 @@
         return;
       }
       var sizes = (_a = virtualRef.current) === null || _a === void 0 ? void 0 : _a.sizes.size;
-      var renders = Math.min(keeps, dataSource.length);
       (_b = virtualRef.current) === null || _b === void 0 ? void 0 : _b.onItemResized(key, size);
-      if (sizes === renders - 1) {
+      if (sizes === keeps - 1 && dataSource.length > keeps) {
         virtualRef.current.updateRange(Object.assign({}, range));
       }
     };

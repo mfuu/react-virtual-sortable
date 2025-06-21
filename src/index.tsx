@@ -360,10 +360,9 @@ function VirtualList<T>(props: VirtualProps<T>, ref: React.ForwardedRef<VirtualC
     }
 
     const sizes = virtualRef.current?.sizes.size;
-    const renders = Math.min(keeps, dataSource.length);
     virtualRef.current?.onItemResized(key, size);
 
-    if (sizes === renders - 1) {
+    if (sizes === keeps - 1 && dataSource.length > keeps) {
       virtualRef.current!.updateRange({ ...range });
     }
   };
