@@ -1,8 +1,30 @@
 import * as React from 'react';
-import { Group, ScrollSpeed } from 'sortable-dnd';
-import { DragEvent, DropEvent } from './core';
+import { Group, ScrollSpeed, SortableEvent } from 'sortable-dnd';
+import { Range } from './core';
 
-export type RenderFunc<T> = (item: T, index: number, key: string | number) => React.ReactElement;
+export type KeyValueType = string | number;
+
+export type EventType = 'onTop' | 'onBottom' | 'onDrag' | 'onDrop' | 'onRangeChange';
+
+export type RenderFunc<T> = (item: T, index: number, key: KeyValueType) => React.ReactElement;
+
+export interface DragEvent<T> {
+  key: KeyValueType;
+  index: number;
+  item: T;
+  event: SortableEvent;
+}
+
+export interface DropEvent<T> {
+  key: KeyValueType;
+  list: T[];
+  item: T;
+  oldList: T[];
+  event: SortableEvent;
+  changed: boolean;
+  oldIndex: number;
+  newIndex: number;
+}
 
 export interface VirtualProps<T> {
   dataKey: string;
@@ -28,15 +50,15 @@ export interface VirtualProps<T> {
   keepOffset?: boolean;
   autoScroll?: boolean;
   scrollSpeed?: ScrollSpeed;
-  fallbackOnBody?: boolean;
+  appendToBody?: boolean;
   scrollThreshold?: number;
   delayOnTouchOnly?: boolean;
+  dropOnAnimationEnd?: boolean;
 
   rootTag?: string;
-  wrapTag?: string;
-
   style?: CSSStyleDeclaration;
   className?: string;
+  wrapTag?: string;
   wrapStyle?: CSSStyleDeclaration;
   wrapClass?: string;
 
@@ -52,25 +74,25 @@ export interface VirtualProps<T> {
   onBottom?: () => void;
   onDrag?: (event: DragEvent<T>) => void;
   onDrop?: (event: DropEvent<T>) => void;
+  onRangeChange?: (range: Range) => void;
 }
 
 export interface VirtualComponentRef {
-  getSize: (key: string | number) => number;
+  getSize: (key: KeyValueType) => number;
   getOffset: () => number;
   getClientSize: () => number;
   getScrollSize: () => number;
   scrollToTop: () => void;
-  scrollToKey: (key: string | number) => void;
+  scrollToKey: (key: KeyValueType) => void;
   scrollToIndex: (index: number) => void;
   scrollToOffset: (offset: number) => void;
   scrollToBottom: () => void;
 }
 
 export interface ItemProps {
-  dataKey: string | number;
-  sizeKey: string;
-  chosenKey: string;
-  dragging: boolean;
+  dataKey: KeyValueType;
+  dragging: KeyValueType;
+  horizontal: boolean;
   children: React.ReactElement;
-  onSizeChange: (key: string | number, size: number) => void;
+  onSizeChange: (key: KeyValueType, size: number) => void;
 }

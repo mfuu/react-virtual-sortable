@@ -29,11 +29,11 @@ function Virtual() {
   // use style and className as jsx used
   return (
     <VirtualList
-      style={{ height: '500px' }}
       dataKey="id"
       dataSource={ list }
       handle=".handle"
       onDrop={ onDrop }
+      style={{ height: '500px' }}
     >
       {
         (record, index, dataKey) => {

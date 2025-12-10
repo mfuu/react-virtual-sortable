@@ -1,30 +1,20 @@
 import * as React from 'react';
-import { SortableEvent } from 'sortable-dnd';
 import {
   debounce,
-  DragEvent,
-  DropEvent,
   getDataKey,
-  isSameValue,
-  Range,
-  ScrollEvent,
-  Sortable,
-  SortableAttrs,
-  SortableOptions,
-  Virtual,
-  VirtualAttrs,
-  VirtualOptions,
+  isEqual,
+  VirtualSortable,
+  type DragEvent,
+  type DropEvent,
+  type Options,
+  type Range,
+  type ScrollEvent,
 } from './core';
 import useChildren from './hooks/useChildren';
 import useCombine from './hooks/useCombine';
-import { VirtualComponentRef, VirtualProps } from './interface';
+import { EventType, KeyValueType, VirtualComponentRef, VirtualProps } from './interface';
 
-const Emits = {
-  drag: 'onDrag',
-  drop: 'onDrop',
-  top: 'onTop',
-  bottom: 'onBottom',
-};
+let draggingItem;
 
 function VirtualList<T>(props: VirtualProps<T>, ref: React.ForwardedRef<VirtualComponentRef>) {
   const {
@@ -61,9 +51,10 @@ function VirtualList<T>(props: VirtualProps<T>, ref: React.ForwardedRef<VirtualC
     ghostStyle = undefined,
     chosenClass = '',
     placeholderClass = '',
-    fallbackOnBody = false,
+    appendToBody = false,
     scrollThreshold = 55,
     delayOnTouchOnly = false,
+    dropOnAnimationEnd = true,
   } = props;
 
   const [range, setRange] = React.useState<Range>({
@@ -73,62 +64,59 @@ function VirtualList<T>(props: VirtualProps<T>, ref: React.ForwardedRef<VirtualC
     behind: 0,
   });
 
-  const dragging = React.useRef<boolean>(false);
-  const chosenKey = React.useRef<string>('');
-  const uniqueKeys = React.useRef<(string | number)[]>([]);
-
-  const rootRef = React.useRef<HTMLElement>();
-  const wrapRef = React.useRef<HTMLElement>();
+  const dragging = React.useRef<KeyValueType>('');
+  const rootElRef = React.useRef<HTMLElement>();
+  const wrapElRef = React.useRef<HTMLElement>();
 
   /**
    * git item size by data-key
    */
-  const getSize = (key: string | number) => {
-    return virtualRef.current!.getSize(key);
+  const getSize = (key: KeyValueType) => {
+    return VS.current!.call('getSize', key);
   };
 
   /**
    * Get the current scroll height
    */
   const getOffset = () => {
-    return virtualRef.current!.getOffset();
+    return VS.current!.call('getOffset');
   };
 
   /**
    * Get client viewport size
    */
   const getClientSize = () => {
-    return virtualRef.current!.getClientSize();
+    return VS.current!.call('getClientSize');
   };
 
   /**
    * Get all scroll size
    */
   const getScrollSize = () => {
-    return virtualRef.current!.getScrollSize();
+    return VS.current!.call('getScrollSize');
   };
 
   /**
    * Scroll to the specified offset
    */
   const scrollToOffset = (offset: number) => {
-    virtualRef.current?.scrollToOffset(offset);
+    VS.current!.call('scrollToOffset', offset);
   };
 
   /**
    * Scroll to the specified index position
    */
-  const scrollToIndex = (index: number) => {
-    virtualRef.current?.scrollToIndex(index);
+  const scrollToIndex = (index: number, align?: 'top' | 'bottom' | 'auto') => {
+    VS.current!.call('scrollToIndex', index, align);
   };
 
   /**
    * Scroll to the specified data-key position
    */
-  const scrollToKey = (key: string | number) => {
+  const scrollToKey = (key: KeyValueType, align?: 'top' | 'bottom' | 'auto') => {
     const index = uniqueKeys.current.indexOf(key);
     if (index > -1) {
-      virtualRef.current?.scrollToIndex(index);
+      VS.current!.call('scrollToIndex', index, align);
     }
   };
 
@@ -143,7 +131,7 @@ function VirtualList<T>(props: VirtualProps<T>, ref: React.ForwardedRef<VirtualC
    * Scroll to bottom of list
    */
   const scrollToBottom = () => {
-    virtualRef.current?.scrollToBottom();
+    VS.current!.call('scrollToBottom');
   };
 
   React.useImperativeHandle(ref, () => ({
@@ -158,91 +146,81 @@ function VirtualList<T>(props: VirtualProps<T>, ref: React.ForwardedRef<VirtualC
     scrollToBottom,
   }));
 
+  // ========================================== data source ==========================================
+  const list = React.useRef<T[]>([]);
+  const uniqueKeys = React.useRef<KeyValueType[]>([]);
+  const lastListLength = React.useRef<number>(0);
+  const listLengthWhenTopLoading = React.useRef<number>(0);
+
   React.useEffect(() => {
-    installVirtual();
-    installSortable();
+    list.current = dataSource;
+
+    updateUniqueKeys();
+    detectRangeChange(lastListLength.current, dataSource.length);
+
+    // if auto scroll to the last offset
+    if (listLengthWhenTopLoading.current && props.keepOffset) {
+      const index = dataSource.length - listLengthWhenTopLoading.current;
+      if (index > 0) {
+        VS.current?.call('scrollToIndex', index);
+      }
+      listLengthWhenTopLoading.current = 0;
+    }
+
+    lastListLength.current = dataSource.length;
+  }, [dataSource]);
+
+  React.useEffect(() => {
+    initVirtualSortable();
 
     return () => {
-      virtualRef.current?.removeScrollEventListener();
-      sortableRef.current?.destroy();
+      VS.current!.destroy();
     };
   }, []);
 
-  // ========================================== use virtual ==========================================
-  const topLoading = React.useRef(false);
-  const virtualRef = React.useRef<Virtual>();
-  const virtualCombinedStates = {
+  const updateUniqueKeys = () => {
+    uniqueKeys.current = list.current.map((item) => getDataKey(item, dataKey));
+    VS.current?.option('uniqueKeys', uniqueKeys.current);
+  };
+
+  const detectRangeChange = (oldListLength: number, newListLength: number) => {
+    if (oldListLength === newListLength) {
+      return;
+    }
+
+    let newRange = { ...range };
+    if (
+      oldListLength > keeps &&
+      newListLength > oldListLength &&
+      newRange.end === oldListLength - 1 &&
+      VS.current?.call('isReachedBottom')
+    ) {
+      newRange.start++;
+    }
+
+    VS.current?.call('updateRange', newRange);
+  };
+
+  const dispatchEvent = (
+    name: keyof VirtualProps<T> & EventType,
+    ...args: Parameters<NonNullable<VirtualProps<T>[keyof VirtualProps<T> & EventType]>>
+  ) => {
+    const handler = props[name];
+    handler && handler.apply(null, args);
+  };
+
+  // ========================================== virtual sortable ==========================================
+  const VS = React.useRef<VirtualSortable<KeyValueType>>();
+
+  const combinedAttrs = {
+    // virtual attrs
     size,
     keeps,
     scroller,
     direction,
     debounceTime,
     throttleTime,
-  };
-  const handleToTop = debounce(() => {
-    topLoading.current = true;
-    props[Emits.top]?.();
-  }, 50);
-
-  const handleToBottom = debounce(() => {
-    props[Emits.bottom]?.();
-  }, 50);
-
-  const onScroll = (event: ScrollEvent) => {
-    topLoading.current = false;
-    if (event.top) {
-      handleToTop();
-    } else if (event.bottom) {
-      handleToBottom();
-    }
-  };
-
-  const onUpdate = (range: Range) => {
-    setRange((current: Range) => {
-      if (sortableRef.current && dragging.current && range.start !== current.start) {
-        sortableRef.current.rangeChanged = true;
-      }
-      return range;
-    });
-  };
-
-  const installVirtual = () => {
-    virtualRef.current = new Virtual({
-      ...virtualCombinedStates,
-      buffer: Math.round(keeps / 3),
-      wrapper: wrapRef.current!,
-      scroller: scroller || rootRef.current,
-      uniqueKeys: uniqueKeys.current,
-      onScroll: onScroll,
-      onUpdate: onUpdate,
-    });
-  };
-
-  useCombine(virtualCombinedStates, () => {
-    VirtualAttrs.forEach((key) => {
-      if (props[key] !== undefined) {
-        virtualRef.current?.option(key as keyof VirtualOptions, props[key]);
-      }
-    });
-  });
-
-  const lastLength = React.useRef<number>(0);
-  React.useEffect(() => {
-    // if auto scroll to the last offset
-    if (lastLength.current && topLoading.current && props.keepOffset) {
-      const index = Math.abs(dataSource.length - lastLength.current);
-      if (index > 0) {
-        virtualRef.current?.scrollToIndex(index);
-      }
-      topLoading.current = false;
-    }
-
-    lastLength.current = dataSource.length;
-  }, [dataSource]);
-
-  // ========================================== use dnd ==========================================
-  const sortableRef = React.useRef<Sortable<T>>();
-  const sortableCombinedStates = {
+    // sortable attrs
     delay,
     group,
     handle,
@@ -256,140 +234,138 @@ function VirtualList<T>(props: VirtualProps<T>, ref: React.ForwardedRef<VirtualC
     ghostStyle,
     chosenClass,
     scrollSpeed,
-    fallbackOnBody,
+    appendToBody,
     scrollThreshold,
     delayOnTouchOnly,
     placeholderClass,
+    dropOnAnimationEnd,
   };
 
-  const onChoose = (event: SortableEvent) => {
-    chosenKey.current = event.node.getAttribute('data-key') as string;
-  };
-
-  const onUnchoose = () => {
-    chosenKey.current = '';
-  };
-
-  const onDrag = (event: DragEvent<T>) => {
-    dragging.current = true;
-    if (!sortable) {
-      virtualRef.current?.enableScroll(false);
-      sortableRef.current?.option('autoScroll', false);
-    }
-    props[Emits.drag]?.(event);
-  };
-
-  const onDrop = (event: DropEvent<T>) => {
-    dragging.current = false;
-    virtualRef.current?.enableScroll(true);
-    sortableRef.current?.option('autoScroll', props.autoScroll);
-
-    const params = { ...event, list: [...event.list] };
-    props[Emits.drop]?.(params);
-  };
-
-  const installSortable = () => {
-    sortableRef.current = new Sortable(rootRef.current as HTMLElement, {
-      ...sortableCombinedStates,
-      list: dataSource,
+  const initVirtualSortable = () => {
+    VS.current = new VirtualSortable<KeyValueType>(rootElRef.current as HTMLElement, {
+      ...combinedAttrs,
+      buffer: Math.round(keeps / 3),
+      wrapper: wrapElRef.current!,
+      scroller: scroller || rootElRef.current!,
       uniqueKeys: uniqueKeys.current,
+      ghostContainer: wrapElRef.current!,
       onDrag,
       onDrop,
-      onChoose,
-      onUnchoose,
+      onScroll,
+      onUpdate,
     });
   };
 
-  useCombine(sortableCombinedStates, () => {
-    SortableAttrs.forEach((key) => {
-      if (props[key] !== undefined) {
-        sortableRef.current?.option(key as keyof SortableOptions<T>, props[key]);
+  useCombine(combinedAttrs, () => {
+    if (!VS.current) return;
+
+    Object.keys(combinedAttrs).forEach((key) => {
+      if (props[key] !== void 0) {
+        VS.current!.option(key as keyof Options<KeyValueType>, props[key]);
       }
     });
   });
 
-  // ========================================== layout ==========================================
-  const list = React.useRef<T[]>([]);
-  React.useEffect(() => {
-    updateUniqueKeys();
-    updateRange(list.current, dataSource);
+  const handleToTop = debounce(() => {
+    listLengthWhenTopLoading.current = list.current.length;
+    dispatchEvent('onTop');
+  }, 50);
 
-    list.current = dataSource;
+  const handleToBottom = debounce(() => {
+    dispatchEvent('onBottom');
+  }, 50);
 
-    sortableRef.current?.option('list', dataSource);
-  }, [dataSource]);
-
-  const updateUniqueKeys = () => {
-    uniqueKeys.current = dataSource.map((item) => getDataKey(item, dataKey));
-    virtualRef.current?.option('uniqueKeys', uniqueKeys.current);
-    sortableRef.current?.option('uniqueKeys', uniqueKeys.current);
+  const onScroll = (event: ScrollEvent) => {
+    listLengthWhenTopLoading.current = 0;
+    if (event.top) {
+      handleToTop();
+    } else if (event.bottom) {
+      handleToBottom();
+    }
   };
 
-  const updateRange = (oldList: T[], newList: T[]) => {
-    if (!oldList.length && !newList.length) {
-      return;
-    }
+  const onUpdate = (range: Range, changed: boolean) => {
+    setRange(range);
 
-    if (oldList.length === newList.length) {
-      return;
-    }
-
-    let newRange = { ...range };
-    if (
-      oldList.length > keeps &&
-      newList.length > oldList.length &&
-      newRange.end === oldList.length - 1 &&
-      scrolledToBottom()
-    ) {
-      newRange.start++;
-    }
-    virtualRef.current?.updateRange(newRange);
+    changed && dispatchEvent('onRangeChange', range);
   };
 
-  const scrolledToBottom = () => {
-    const offset = getOffset();
-    const clientSize = getClientSize();
-    const scrollSize = getScrollSize();
-    return offset + clientSize + 1 >= scrollSize;
-  };
-
-  const onSizeChange = (key: string | number, size: number) => {
+  const onSizeChange = (key: KeyValueType, size: number) => {
     // ignore changes for dragging element
-    if (isSameValue(key, chosenKey.current)) {
+    if (isEqual(key, dragging.current) || !VS.current) {
       return;
     }
 
-    const sizes = virtualRef.current?.sizes.size;
-    virtualRef.current?.onItemResized(key, size);
+    const sizes = VS.current.virtual.sizes.size;
+    VS.current.call('updateItemSize', key, size);
 
-    if (sizes === keeps - 1 && dataSource.length > keeps) {
-      virtualRef.current!.updateRange({ ...range });
+    if (sizes === keeps - 1 && list.current.length > keeps) {
+      VS.current.call('updateRange', range);
     }
   };
 
-  const { containerStyle, wrapperStyle, itemSizeKey } = React.useMemo(() => {
+  const onDrag = (event: DragEvent<KeyValueType>) => {
+    const { key, index } = event;
+    const item = list.current[index];
+
+    dragging.current = key;
+    draggingItem = item;
+
+    if (!sortable) {
+      VS.current?.call('enableScroll', false);
+      VS.current?.option('autoScroll', false);
+    }
+
+    dispatchEvent('onDrag', { ...event, item });
+  };
+
+  const onDrop = (event: DropEvent<KeyValueType>) => {
+    const item = draggingItem;
+    const { oldIndex, newIndex } = event;
+
+    const oldList = [...list.current];
+    const newList = [...list.current];
+
+    if (oldIndex === -1) {
+      newList.splice(newIndex, 0, item);
+    } else if (newIndex === -1) {
+      newList.splice(oldIndex, 1);
+    } else {
+      newList.splice(oldIndex, 1);
+      newList.splice(newIndex, 0, item);
+    }
+
+    VS.current!.call('enableScroll', true);
+    VS.current!.option('autoScroll', props.autoScroll);
+
+    dragging.current = '';
+
+    dispatchEvent('onDrop', { ...event, item, list: newList, oldList });
+  };
+
+  // ========================================== layout ==========================================
+  const { rootElStyle, wrapElStyle } = React.useMemo(() => {
     const { front, behind } = range;
-    const isHorizontal = direction !== 'vertical';
-
-    const overflowStyle = isHorizontal ? 'auto hidden' : 'hidden auto';
+    const isHorizontal = direction === 'horizontal';
+    const overflow = isHorizontal ? 'auto hidden' : 'hidden auto';
     const padding = isHorizontal ? `0px ${behind}px 0px ${front}px` : `${front}px 0px ${behind}px`;
-
-    const containerStyle = { ...style, overflow: tableMode || scroller ? '' : overflowStyle };
-    const wrapperStyle = { ...wrapStyle, padding: tableMode ? '' : padding };
-    const itemSizeKey = isHorizontal ? 'offsetWidth' : 'offsetHeight';
+    const rootElStyle = { ...style, overflow: tableMode || scroller ? '' : overflow };
+    const wrapElStyle = { ...wrapStyle, padding: tableMode ? '' : padding };
 
     return {
-      containerStyle,
-      wrapperStyle,
-      itemSizeKey,
+      rootElStyle,
+      wrapElStyle,
     };
   }, [range, style, wrapStyle, scroller, tableMode, direction]);
 
-  const [containerTag, wrapperTage] = React.useMemo(() => {
-    const container = tableMode ? 'table' : wrapTag;
-    const wrapper = tableMode ? 'tbody' : wrapTag;
+  const { rootElTag, wrapElTag } = React.useMemo(() => {
+    const rootElTag = tableMode ? 'table' : wrapTag;
+    const wrapElTag = tableMode ? 'tbody' : wrapTag;
 
-    return [container, wrapper];
+    return {
+      rootElTag,
+      wrapElTag,
+    };
   }, [rootTag, wrapTag, tableMode]);
 
   const listChildren = useChildren({
@@ -397,10 +373,9 @@ function VirtualList<T>(props: VirtualProps<T>, ref: React.ForwardedRef<VirtualC
     start: range.start,
     end: range.end,
     dataKey,
-    sizeKey: itemSizeKey,
     children: props.children,
     dragging: dragging.current,
-    chosenKey: chosenKey.current,
+    horizontal: direction === 'horizontal',
     onSizeChange,
   });
 
@@ -415,26 +390,25 @@ function VirtualList<T>(props: VirtualProps<T>, ref: React.ForwardedRef<VirtualC
   };
 
   return React.createElement(
-    containerTag,
+    rootElTag,
     {
-      ref: rootRef,
-      style: containerStyle,
+      ref: rootElRef,
+      style: rootElStyle,
       className,
     },
     [
       props.header,
       React.createElement(
-        wrapperTage,
+        wrapElTag,
         {
-          ref: wrapRef,
-          key: 'virtual-table-wrap',
-          style: wrapperStyle,
+          ref: wrapElRef,
+          style: wrapElStyle,
           className: wrapClass,
         },
         [
-          tableMode && TableSpacer(range.front, 'virtual-table-front'),
+          tableMode && TableSpacer(range.front, 'front'),
           ...listChildren,
-          tableMode && TableSpacer(range.behind, 'virtual-table-behind'),
+          tableMode && TableSpacer(range.behind, 'behind'),
         ]
       ),
       props.footer,

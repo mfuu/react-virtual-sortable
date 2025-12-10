@@ -29,8 +29,8 @@ export default defineConfig({
         {
           children: [
             { title: 'Start', link: '/guide/install' },
-            { title: 'Callback', link: '/guide/callback' },
             { title: 'Props', link: '/guide/props' },
+            { title: 'Callback', link: '/guide/callback' },
             { title: 'Methods', link: '/guide/methods' },
           ],
         },
@@ -40,10 +40,11 @@ export default defineConfig({
           children: [
             { title: 'Basic', link: '/demo/basic' },
             { title: 'Group', link: '/demo/group' },
-            { title: 'Infinity', link: '/demo/infinity' },
             { title: 'Horizontal', link: '/demo/horizontal' },
+            { title: 'Infinity', link: '/demo/infinity' },
+            { title: 'ScrollTo', link: '/demo/scrollto' },
+            { title: 'Scroller', link: '/demo/scroller' },
             { title: 'Table Mode', link: '/demo/table' },
-            { title: 'Customize Scroller', link: '/demo/scroller' },
           ],
         },
       ],

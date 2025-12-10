@@ -1,9 +1,9 @@
 import * as React from 'react';
+import { isEqual } from './core';
 import { ItemProps } from './interface';
-import { isSameValue } from './core';
 
 function Item(props: ItemProps) {
-  const { dataKey, sizeKey, dragging, chosenKey, children, onSizeChange } = props;
+  const { dataKey, horizontal, dragging, children, onSizeChange } = props;
 
   const eleRef = React.useRef<HTMLElement>(null);
 
@@ -11,6 +11,7 @@ function Item(props: ItemProps) {
     let observer: ResizeObserver | null;
     if (typeof ResizeObserver !== undefined) {
       observer = new ResizeObserver(() => {
+        const sizeKey = horizontal ? 'offsetWidth' : 'offsetHeight';
         const size = eleRef.current![sizeKey];
         onSizeChange(dataKey, size);
       });
@@ -26,13 +27,10 @@ function Item(props: ItemProps) {
 
   const itemStyle: React.CSSProperties = React.useMemo(() => {
     const style = children.props.style || {};
-    const isChosen = isSameValue(dataKey, chosenKey);
-    if (dragging && isChosen) {
-      return Object.assign(style, { display: 'none' });
-    }
+    const isDragging = isEqual(dataKey, dragging);
 
-    return style;
-  }, [chosenKey, dragging]);
+    return { ...style, display: isDragging ? 'none' : '' };
+  }, [dragging]);
 
   return React.cloneElement(children, {
     'data-key': dataKey,
