@@ -1,6 +1,6 @@
 import * as React from 'react';
 import { getDataKey } from '../core';
-import { KeyValueType, RenderFunc } from '../interface';
+import type { KeyValueType, RenderFunc } from '../interface';
 import Item from '../Item';
 
 interface Props<T> {

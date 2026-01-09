@@ -12,7 +12,7 @@ import {
 } from './core';
 import useChildren from './hooks/useChildren';
 import useCombine from './hooks/useCombine';
-import { EventType, KeyValueType, VirtualComponentRef, VirtualProps } from './interface';
+import type { EventType, KeyValueType, VirtualComponentRef, VirtualProps } from './interface';
 
 let draggingItem;
 
@@ -231,7 +231,7 @@ function VirtualList<T>(props: VirtualProps<T>, ref: React.ForwardedRef<VirtualC
     animation,
     autoScroll,
     ghostClass,
-    ghostStyle,
+    ghostStyle: ghostStyle as Partial<CSSStyleDeclaration>,
     chosenClass,
     scrollSpeed,
     appendToBody,
@@ -347,10 +347,18 @@ function VirtualList<T>(props: VirtualProps<T>, ref: React.ForwardedRef<VirtualC
   const { rootElStyle, wrapElStyle } = React.useMemo(() => {
     const { front, behind } = range;
     const isHorizontal = direction === 'horizontal';
+
     const overflow = isHorizontal ? 'auto hidden' : 'hidden auto';
     const padding = isHorizontal ? `0px ${behind}px 0px ${front}px` : `${front}px 0px ${behind}px`;
-    const rootElStyle = { ...style, overflow: tableMode || scroller ? '' : overflow };
-    const wrapElStyle = { ...wrapStyle, padding: tableMode ? '' : padding };
+
+    const rootElStyle: React.CSSProperties = {
+      ...style,
+      overflow: tableMode || scroller ? '' : overflow,
+    };
+    const wrapElStyle: React.CSSProperties = {
+      ...wrapStyle,
+      padding: tableMode ? '' : padding,
+    };
 
     return {
       rootElStyle,

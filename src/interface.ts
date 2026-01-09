@@ -1,6 +1,6 @@
 import * as React from 'react';
-import { Group, ScrollSpeed, SortableEvent } from 'sortable-dnd';
-import { Range } from './core';
+import type { Group, ScrollSpeed, SortableEvent } from 'sortable-dnd';
+import type { Range } from './core';
 
 export type KeyValueType = string | number;
 
@@ -56,13 +56,13 @@ export interface VirtualProps<T> {
   dropOnAnimationEnd?: boolean;
 
   rootTag?: string;
-  style?: CSSStyleDeclaration;
+  style?: React.CSSProperties;
   className?: string;
   wrapTag?: string;
-  wrapStyle?: CSSStyleDeclaration;
+  wrapStyle?: React.CSSProperties;
   wrapClass?: string;
 
-  ghostStyle?: CSSStyleDeclaration;
+  ghostStyle?: React.CSSProperties;
   ghostClass?: string;
   chosenClass?: string;
   placeholderClass?: string;

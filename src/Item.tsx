@@ -1,6 +1,6 @@
 import * as React from 'react';
 import { isEqual } from './core';
-import { ItemProps } from './interface';
+import type { ItemProps } from './interface';
 
 function Item(props: ItemProps) {
   const { dataKey, horizontal, dragging, children, onSizeChange } = props;

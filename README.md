@@ -134,7 +134,7 @@ return (
 )
 ```
 
-| **Prop**                      | **Description**                                            |
+| **Method**                    | **Description**                                            |
 | ----------------------------- | ---------------------------------------------------------- |
 | `getSize(key)`                | get the height of the specified item by key value          |
 | `getOffset()`                 | get the current scroll top/left                            |
