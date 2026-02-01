@@ -32,8 +32,9 @@ export interface VirtualProps<T> {
   children: React.ReactElement | RenderFunc<T>;
   tableMode?: boolean;
 
-  keeps?: number;
   size?: number;
+  keeps?: number;
+  buffer?: number;
   group?: Group | string;
   handle?: string;
   lockAxis?: 'x' | 'y';

@@ -32,6 +32,7 @@ function VirtualList<T>(props: VirtualProps<T>, ref: React.ForwardedRef<VirtualC
 
     size = undefined,
     keeps = 30,
+    buffer = undefined,
     scroller = undefined,
     direction = 'vertical',
     debounceTime = 0,
@@ -216,6 +217,7 @@ function VirtualList<T>(props: VirtualProps<T>, ref: React.ForwardedRef<VirtualC
     // virtual attrs
     size,
     keeps,
+    buffer,
     scroller,
     direction,
     debounceTime,
@@ -244,7 +246,6 @@ function VirtualList<T>(props: VirtualProps<T>, ref: React.ForwardedRef<VirtualC
   const initVirtualSortable = () => {
     VS.current = new VirtualSortable<KeyValueType>(rootElRef.current as HTMLElement, {
       ...combinedAttrs,
-      buffer: Math.round(keeps / 3),
       wrapper: wrapElRef.current!,
       scroller: scroller || rootElRef.current!,
       uniqueKeys: uniqueKeys.current,
