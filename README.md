@@ -36,11 +36,11 @@ function Virtual() {
       style={{ height: '500px' }}
     >
       {
-        (record, index, dataKey) => {
+        (item, index, dataKey) => {
           return (
             <div>
               <span className=".handle">{ index }</span>
-              { record.text }
+              { item.text }
             </div>
           )
         }
@@ -58,6 +58,7 @@ function Virtual() {
 | --------------- | ---------- | --------------------------------------- |
 | `onTop`         | `Function` | Scrolling to the top of the scroller    |
 | `onBottom`      | `Function` | Scrolling to the bottom of the scroller |
+| `onScroll`      | `Function` | Scroll event                            |
 | `onDrag`        | `Function` | Drag is started                         |
 | `onDrop`        | `Function` | Drag is complete                        |
 | `onRangeChange` | `Function` | Range of visible items has changed      |
@@ -129,7 +130,7 @@ return (
     ...
   >
     {
-      (record) => <div>{ record.text }</div>
+      (item) => <div>{ item.text }</div>
     }
   </virtualList>
 )

@@ -36,15 +36,15 @@ function Virtual() {
       className="virtual-table"
     >
       {
-        (record, index, dataKey) => {
+        (item, index, dataKey) => {
           return (
             <tr>
               <td>
-                <span className="index">#{ record.index }</span>
+                <span className="index">#{ item.index }</span>
                 <span className="handle">☰</span>
               </td>
-              <td>{ record.name }</td>
-              <td>{ record.desc }</td>
+              <td>{ item.name }</td>
+              <td>{ item.desc }</td>
             </tr>
           )
         }

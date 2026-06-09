@@ -1,8 +1,8 @@
 import * as React from 'react';
 import { isEqual } from './core';
-import type { ItemProps } from './interface';
+import type { ListItemProps } from './interface';
 
-function Item(props: ItemProps) {
+function Item(props: ListItemProps) {
   const { dataKey, horizontal, dragging, children, onSizeChange } = props;
 
   const eleRef = React.useRef<HTMLElement>(null);

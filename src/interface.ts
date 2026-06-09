@@ -1,10 +1,10 @@
 import * as React from 'react';
 import type { Group, ScrollSpeed, SortableEvent } from 'sortable-dnd';
-import type { Range } from './core';
+import type { Range, ScrollEvent } from './core';
 
 export type KeyValueType = string | number;
 
-export type EventType = 'onTop' | 'onBottom' | 'onDrag' | 'onDrop' | 'onRangeChange';
+export type EventType = 'onTop' | 'onBottom' | 'onScroll' | 'onDrag' | 'onDrop' | 'onRangeChange';
 
 export type RenderFunc<T> = (item: T, index: number, key: KeyValueType) => React.ReactElement;
 
@@ -26,7 +26,7 @@ export interface DropEvent<T> {
   newIndex: number;
 }
 
-export interface VirtualProps<T> {
+export interface VirtualListProps<T> {
   dataKey: string;
   dataSource: T[];
   children: React.ReactElement | RenderFunc<T>;
@@ -73,12 +73,13 @@ export interface VirtualProps<T> {
 
   onTop?: () => void;
   onBottom?: () => void;
+  onScroll?: (event: ScrollEvent) => void;
   onDrag?: (event: DragEvent<T>) => void;
   onDrop?: (event: DropEvent<T>) => void;
   onRangeChange?: (range: Range) => void;
 }
 
-export interface VirtualComponentRef {
+export interface VirtualListHandle {
   getSize: (key: KeyValueType) => number;
   getOffset: () => number;
   getClientSize: () => number;
@@ -90,7 +91,7 @@ export interface VirtualComponentRef {
   scrollToBottom: () => void;
 }
 
-export interface ItemProps {
+export interface ListItemProps {
   dataKey: KeyValueType;
   dragging: KeyValueType;
   horizontal: boolean;

@@ -38,14 +38,14 @@ function Virtual() {
       className="virtual-list"
     >
       {
-        (record, index, dataKey) => {
+        (item, index, dataKey) => {
           return (
             <div className="list-item">
               <div className="item-title">
-                <span className="index">#{ record.index }</span>
+                <span className="index">#{ item.index }</span>
                 <span className="handle">☰</span>
               </div>
-              <p>{ record.desc }</p>
+              <p>{ item.desc }</p>
             </div>
           )
         }

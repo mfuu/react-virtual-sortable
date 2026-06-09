@@ -12,11 +12,11 @@ import {
 } from './core';
 import useChildren from './hooks/useChildren';
 import useCombine from './hooks/useCombine';
-import type { EventType, KeyValueType, VirtualComponentRef, VirtualProps } from './interface';
+import type { EventType, KeyValueType, VirtualListHandle, VirtualListProps } from './interface';
 
 let draggingItem;
 
-function VirtualList<T>(props: VirtualProps<T>, ref: React.ForwardedRef<VirtualComponentRef>) {
+function VirtualList<T>(props: VirtualListProps<T>, ref: React.ForwardedRef<VirtualListHandle>) {
   const {
     dataKey = '',
     dataSource = [],
@@ -203,8 +203,8 @@ function VirtualList<T>(props: VirtualProps<T>, ref: React.ForwardedRef<VirtualC
   };
 
   const dispatchEvent = (
-    name: keyof VirtualProps<T> & EventType,
-    ...args: Parameters<NonNullable<VirtualProps<T>[keyof VirtualProps<T> & EventType]>>
+    name: keyof VirtualListProps<T> & EventType,
+    ...args: Parameters<NonNullable<VirtualListProps<T>[keyof VirtualListProps<T> & EventType]>>
   ) => {
     const handler = props[name];
     handler && handler.apply(null, args);
@@ -277,6 +277,8 @@ function VirtualList<T>(props: VirtualProps<T>, ref: React.ForwardedRef<VirtualC
   }, 50);
 
   const onScroll = (event: ScrollEvent) => {
+    dispatchEvent('onScroll', event);
+
     listLengthWhenTopLoading.current = 0;
     if (event.top) {
       handleToTop();
@@ -426,5 +428,7 @@ function VirtualList<T>(props: VirtualProps<T>, ref: React.ForwardedRef<VirtualC
 }
 
 export default React.forwardRef(VirtualList) as <T>(
-  props: VirtualProps<T> & { ref?: React.ForwardedRef<VirtualComponentRef> }
+  props: VirtualListProps<T> & { ref?: React.ForwardedRef<VirtualListHandle> }
 ) => ReturnType<typeof VirtualList>;
+
+export * from './interface';

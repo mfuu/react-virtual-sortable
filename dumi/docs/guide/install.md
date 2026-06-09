@@ -36,11 +36,11 @@ function Virtual() {
       style={{ height: '500px' }}
     >
       {
-        (record, index, dataKey) => {
+        (item, index, dataKey) => {
           return (
             <div>
               <span className=".handle">{ index }</span>
-              { record.text }
+              { item.text }
             </div>
           )
         }
