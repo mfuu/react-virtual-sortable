@@ -21,14 +21,14 @@ function Virtual() {
       className="virtual-list"
     >
       {
-        (record, index, dataKey) => {
+        (item, index, dataKey) => {
           return (
             <div className="list-item">
               <div className="item-title">
-                <span className="index">#{ record.index }</span>
+                <span className="index">#{ item.index }</span>
                 <span className="handle">\u2630</span>
               </div>
-              <p>{ record.desc }</p>
+              <p>{ item.desc }</p>
             </div>
           )
         }
@@ -61,11 +61,11 @@ function Virtual() {
       className="virtual-list flex-1"
     >
       {
-        (record, index, dataKey) => {
+        (item, index, dataKey) => {
           return (
             <div className="list-item">
               <div className="item-title">
-                <span className="index">#{ record.index }</span>
+                <span className="index">#{ item.index }</span>
                 <span className="handle">\u2630</span>
               </div>
             </div>
@@ -108,14 +108,14 @@ function Virtual() {
       wrapStyle={{ display: 'flex' }}
     >
       {
-        (record, index, dataKey) => {
+        (item, index, dataKey) => {
           return (
             <div className="list-item">
               <div className="item-title">
-                <span className="index">#{ record.index }</span>
+                <span className="index">#{ item.index }</span>
                 <span className="handle">\u2630</span>
               </div>
-              <p>{ record.desc }</p>
+              <p>{ item.desc }</p>
             </div>
           )
         }
@@ -163,14 +163,14 @@ function Virtual() {
       className="virtual-list"
     >
       {
-        (record, index, dataKey) => {
+        (item, index, dataKey) => {
           return (
             <div className="list-item">
               <div className="item-title">
-                <span className="index">#{ record.index }</span>
+                <span className="index">#{ item.index }</span>
                 <span className="handle">\u2630</span>
               </div>
-              <p>{ record.desc }</p>
+              <p>{ item.desc }</p>
             </div>
           )
         }
@@ -202,14 +202,14 @@ function Virtual() {
       chosenClass="chosen"
     >
       {
-        (record, index, dataKey) => {
+        (item, index, dataKey) => {
           return (
             <div className="list-item">
               <div className="item-title">
-                <span className="index">#{ record.index }</span>
+                <span className="index">#{ item.index }</span>
                 <span className="handle">\u2630</span>
               </div>
-              <p>{ record.desc }</p>
+              <p>{ item.desc }</p>
             </div>
           )
         }
@@ -279,14 +279,14 @@ function Virtual() {
         className="virtual-list"
       >
         {
-          (record, index, dataKey) => {
+          (item, index, dataKey) => {
             return (
               <div className="list-item">
                 <div className="item-title">
-                  <span className="index">#{ record.index }</span>
+                  <span className="index">#{ item.index }</span>
                   <span className="handle">\u2630</span>
                 </div>
-                <p>{ record.desc }</p>
+                <p>{ item.desc }</p>
               </div>
             )
           }
@@ -333,15 +333,15 @@ function Virtual() {
       className="virtual-table"
     >
       {
-        (record, index, dataKey) => {
+        (item, index, dataKey) => {
           return (
             <tr>
               <td>
-                <span className="index">#{ record.index }</span>
+                <span className="index">#{ item.index }</span>
                 <span className="handle">\u2630</span>
               </td>
-              <td>{ record.name }</td>
-              <td>{ record.desc }</td>
+              <td>{ item.name }</td>
+              <td>{ item.desc }</td>
             </tr>
           )
         }
@@ -389,11 +389,11 @@ function Virtual() {
       style={{ height: '500px' }}
     >
       {
-        (record, index, dataKey) => {
+        (item, index, dataKey) => {
           return (
             <div>
               <span className=".handle">{ index }</span>
-              { record.text }
+              { item.text }
             </div>
           )
         }
