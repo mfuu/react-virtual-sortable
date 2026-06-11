@@ -407,23 +407,19 @@ function VirtualList<T>(props: VirtualListProps<T>, ref: React.ForwardedRef<Virt
       style: rootElStyle,
       className,
     },
-    [
-      props.header,
-      React.createElement(
-        wrapElTag,
-        {
-          ref: wrapElRef,
-          style: wrapElStyle,
-          className: wrapClass,
-        },
-        [
-          tableMode && TableSpacer(range.front, 'front'),
-          ...listChildren,
-          tableMode && TableSpacer(range.behind, 'behind'),
-        ]
-      ),
-      props.footer,
-    ]
+    props.header,
+    React.createElement(
+      wrapElTag,
+      {
+        ref: wrapElRef,
+        style: wrapElStyle,
+        className: wrapClass,
+      },
+      tableMode && TableSpacer(range.front, 'front'),
+      ...listChildren,
+      tableMode && TableSpacer(range.behind, 'behind')
+    ),
+    props.footer
   );
 }
 
