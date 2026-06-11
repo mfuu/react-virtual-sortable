@@ -431,4 +431,4 @@ export default React.forwardRef(VirtualList) as <T>(
   props: VirtualListProps<T> & { ref?: React.ForwardedRef<VirtualListHandle> }
 ) => ReturnType<typeof VirtualList>;
 
-export * from './interface';
+export type { Range, DragEvent, DropEvent, ScrollEvent, VirtualListHandle };
